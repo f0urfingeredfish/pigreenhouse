@@ -52,10 +52,6 @@ def get_gpu_temp():
    t = float(res)/1000
    return(t)
 
-# convert float to a decimal string since dynamodb doesn't support floats
-def floatToDec(float):
-   return Decimal(str(float))
-
 class ProgressPercentage(object):
     def __init__(self, filename):
         self._filename = filename
