@@ -120,12 +120,11 @@ def log_sensor():
   log.write(logitem + "\n")
   log.close()
   sense.set_pixels(success_pix)
+  print(logitem)
+  print('log saved to database')
   sleep(5)
   sense.clear()
   sense.set_pixel(0, 0, 0, 240, 0) 
-  print(logitem)
-  print('log saved to database')
-
 
 def main():
   try:
