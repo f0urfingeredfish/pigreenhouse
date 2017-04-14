@@ -1,6 +1,7 @@
 # pigreenhouse
 
 A small script to log your raspbery pi sense hat sensor data to an amazon dynamodb and save a photo to s3.
+This is the start of my 'smart' greenhouse project. The goal is to have time lapse images and graphed sensor data of the greenhouse.
 
 Getting Started
 ---------------
