@@ -16,6 +16,7 @@ Getting Started
 * Setup boto3 credentials https://github.com/boto/boto3
 * Setup a dynamodb table https://aws.amazon.com/documentation/dynamodb/ . Default table name is `Greenhouse`
 * Create an s3 bucket to store photos taken when sensor data is logged https://aws.amazon.com/s3/ you will have to change the `s3_bucket` setting in sensor.py https://github.com/f0urfingeredfish/pigreenhouse/blob/master/sensor.py#L16
+* Add credentials to access the table and s3 https://aws.amazon.com/iam/
 * Run `python sensor.py`
 * The sense hat led will show a green smiley face on success and then a green dot as well as standard output. If there is an error or you lose connection to amazon it will display a red led. The script won't exit but will try again at the set logging interval.
 
