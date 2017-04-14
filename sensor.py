@@ -13,14 +13,19 @@ from picamera import PiCamera
 import threading
 from botocore.exceptions import ClientError
 
+# name of s3 bucket
 s3_bucket = 'blackholegreenhouse'
+# folder to store photos
 photo_folder = 'photos'
+# how often to log data and take photos
 log_interval = 300
+# log file name
 log_file = './log.txt'
 R = [255, 0, 0]
 G = [0, 255, 0]
 B = [0, 0, 255]
-O = [0, 0, 0]  
+O = [0, 0, 0]
+# green smilely face for led array
 success_pix = [
 O, O, G, G, G, G, O, O,
 O, G, O, O, O, O, G, O,
@@ -33,7 +38,6 @@ O, O, G, G, G, G, O, O
 ]
 
 s3 = boto3.client('s3')
-
 dynamodb = boto3.resource('dynamodb')
 sense = SenseHat()
 camera = PiCamera()
@@ -47,11 +51,13 @@ def get_cpu_temp():
    t = float(res.replace("temp=","").replace("'C\n",""))
    return(t)
 
+# get GPU temp
 def get_gpu_temp():  
    res = os.popen("cat /sys/class/thermal/thermal_zone0/temp").readline()
    t = float(res)/1000
    return(t)
 
+# output s3 photo upload progress
 class ProgressPercentage(object):
     def __init__(self, filename):
         self._filename = filename
@@ -70,9 +76,11 @@ class ProgressPercentage(object):
                     percentage))
             sys.stdout.flush()
 
+# show red error led pixel
 def display_error_led():
   sense.set_pixel(0, 0, 255, 0, 0)
 
+# capture and upload a photo to s3
 def save_photo():
   now = str(datetime.datetime.utcnow())
   photo_file = '{}.jpg'.format(now)
@@ -90,6 +98,7 @@ def save_photo():
   print('saved photo to s3')
   return (now, photo_file, photo_path)
 
+# capture photo and store sensor data in dynamodb
 def log_sensor():
   try:
     now, photo_file, photo_path = save_photo()
@@ -137,4 +146,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
