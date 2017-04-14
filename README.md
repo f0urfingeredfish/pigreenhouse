@@ -5,9 +5,9 @@ This is the start of my 'smart' greenhouse project. The goal is to have time lap
 
 Hardware
 --------
-Raspi 3 https://www.raspberrypi.org/products/raspberry-pi-3-model-b/
-Sense Hat https://www.raspberrypi.org/products/sense-hat/
-Camera module v2 https://www.raspberrypi.org/products/camera-module-v2/
+* Raspi 3 https://www.raspberrypi.org/products/raspberry-pi-3-model-b/
+* Sense Hat https://www.raspberrypi.org/products/sense-hat/
+* Camera module v2 https://www.raspberrypi.org/products/camera-module-v2/
 
 Getting Started
 ---------------
