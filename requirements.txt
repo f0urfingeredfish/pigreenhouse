@@ -1,0 +1,4 @@
+boto3==1.4.4
+botocore==1.5.33
+picamera==1.13
+sense_hat==2.2.0
