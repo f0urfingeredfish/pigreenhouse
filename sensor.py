@@ -13,6 +13,7 @@ from picamera import PiCamera
 import threading
 from botocore.exceptions import ClientError
 
+s3_bucket = 'blackholegreenhouse'
 photo_folder = 'photos'
 log_interval = 300
 log_file = './log.txt'
@@ -83,7 +84,7 @@ def save_photo():
   camera.capture(photo_path)
   try:
     s3.upload_file(photo_path, 
-      'blackholegreenhouse', 
+      s3_bucket, 
       photo_file, 
       Callback=ProgressPercentage(photo_path))
   except ClientError as e:
