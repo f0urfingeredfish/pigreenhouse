@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from time import sleep
-from sense_hat import SenseHat
+from sense_hat import SenseHat, ACTION_PRESSED, ACTION_HELD, ACTION_RELEASED
 from decimal import *
 import traceback
 import boto3
@@ -12,6 +12,8 @@ import os
 from picamera import PiCamera
 import threading
 from botocore.exceptions import ClientError
+from gpiozero import OutputDevice
+import fan_animation
 
 # name of s3 bucket
 s3_bucket = 'blackholegreenhouse'
@@ -42,8 +44,12 @@ dynamodb = boto3.resource('dynamodb')
 sense = SenseHat()
 camera = PiCamera()
 table = dynamodb.Table('Greenhouse')
+relay = OutputDevice(17, active_high=False)
+relay2 = OutputDevice(27, active_high=False)
 sense.low_light = True
+is_log_save_success = False
 sense.clear()
+
 
 # get CPU temperature
 def get_cpu_temp():
@@ -78,7 +84,12 @@ class ProgressPercentage(object):
 
 # show red error led pixel
 def display_error_led():
+  is_log_save_success = False
   sense.set_pixel(0, 0, 255, 0, 0)
+
+def display_success_led():
+  if is_log_save_success:
+    sense.set_pixel(0, 0, 0, 240, 0) 
 
 # capture and upload a photo to s3
 def save_photo():
@@ -100,6 +111,7 @@ def save_photo():
 
 # capture photo and store sensor data in dynamodb
 def log_sensor():
+  global is_log_save_success
   try:
     now, photo_file, photo_path = save_photo()
   except:
@@ -127,9 +139,43 @@ def log_sensor():
   sense.set_pixels(success_pix)
   print(logitem)
   print('log saved to database')
-  sleep(5)
+  sleep(2)
   sense.clear()
-  sense.set_pixel(0, 0, 0, 240, 0) 
+  is_log_save_success = True
+  display_success_led()
+
+# relay 1 joystick up to turn on and off
+is_relay_on = 0
+def on_joy_up(event):
+  global is_relay_on
+  if event.action == ACTION_RELEASED:
+    if is_relay_on == 0:
+      relay.on()
+      fan_animation.play()
+      is_relay_on = 1
+    else:
+      relay.off()
+      fan_animation.stop()
+      is_relay_on = 0
+      display_success_led()
+
+sense.stick.direction_up = on_joy_up
+
+# relay 2 joystick down to turn on and off
+is_relay2_on = 0
+def on_joy_down(event):
+  global is_relay2_on
+  if event.action == ACTION_RELEASED:
+    if is_relay2_on == 0:
+      relay2.on()
+      is_relay2_on = 1
+      sense.set_pixel(0, 2, 0, 100, 255)
+    else:
+      relay2.off()
+      is_relay2_on = 0
+      sense.set_pixel(0, 2, 0, 0, 0)
+
+sense.stick.direction_down = on_joy_down
 
 def main():
   try:
@@ -144,5 +190,5 @@ def main():
     traceback.print_exc(file=sys.stdout)
   sys.exit(0)
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__main__": 
+  main()
