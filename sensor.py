@@ -44,7 +44,7 @@ dynamodb = boto3.resource('dynamodb')
 sense = SenseHat()
 camera = PiCamera()
 table = dynamodb.Table('Greenhouse')
-relay = OutputDevice(17, active_high=False)
+fan = OutputDevice(17, active_high=False)
 relay2 = OutputDevice(27, active_high=False)
 sense.low_light = True
 is_log_save_success = False
@@ -58,7 +58,7 @@ def get_cpu_temp():
    return(t)
 
 # get GPU temp
-def get_gpu_temp():  
+def get_gpu_temp():
    res = os.popen("cat /sys/class/thermal/thermal_zone0/temp").readline()
    t = float(res)/1000
    return(t)
@@ -89,7 +89,7 @@ def display_error_led():
 
 def display_success_led():
   if is_log_save_success:
-    sense.set_pixel(0, 0, 0, 240, 0) 
+    sense.set_pixel(0, 0, 0, 240, 0)
 
 # capture and upload a photo to s3
 def save_photo():
@@ -98,14 +98,14 @@ def save_photo():
   photo_path = '{}/{}'.format(photo_folder, photo_file)
   camera.capture(photo_path)
   try:
-    s3.upload_file(photo_path, 
-      s3_bucket, 
-      photo_file, 
+    s3.upload_file(photo_path,
+      s3_bucket,
+      photo_file,
       Callback=ProgressPercentage(photo_path))
   except ClientError as e:
     print('error saving photo' + e.response['Error']['Code'])
     display_error_led()
-     
+
   print('saved photo to s3')
   return (now, photo_file, photo_path)
 
@@ -120,12 +120,12 @@ def log_sensor():
     return
   Item={
     'log': now,
-    'date': int(time.time()), 
+    'date': int(time.time()),
     'humidity': str(sense.get_humidity()),
     'pressure': str(sense.get_pressure()),
     'compass': str(sense.get_compass()),
     'temperature': str(sense.get_temperature()),
-    'cpu_temp': str(get_cpu_temp()), 
+    'cpu_temp': str(get_cpu_temp()),
     'gpu_temp': str(get_gpu_temp()),
     'temperature_from_humidity': str(sense.get_temperature_from_humidity()),
     'temperature_from_pressure': str(sense.get_temperature_from_pressure()),
@@ -144,20 +144,28 @@ def log_sensor():
   is_log_save_success = True
   display_success_led()
 
+is_fan_on = False
+def start_fan():
+  global is_fan_on
+  is_fan_on = True
+  fan.on()
+  fan_animation.play()
+
+def stop_fan():
+  global is_fan_on
+  is_fan_on = False
+  fan.off()
+  fan_animation.stop()
+  sleep(1)
+  display_success_led()
+
 # relay 1 joystick up to turn on and off
-is_relay_on = 0
 def on_joy_up(event):
-  global is_relay_on
   if event.action == ACTION_RELEASED:
-    if is_relay_on == 0:
-      relay.on()
-      fan_animation.play()
-      is_relay_on = 1
+    if is_fan_on == False:
+      start_fan()
     else:
-      relay.off()
-      fan_animation.stop()
-      is_relay_on = 0
-      display_success_led()
+      stop_fan()
 
 sense.stick.direction_up = on_joy_up
 
@@ -186,9 +194,9 @@ def main():
     sense.clear()
     print "Exiting sensor logger"
   except Exception:
-    display_error_led()    
+    display_error_led()
     traceback.print_exc(file=sys.stdout)
   sys.exit(0)
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
   main()
