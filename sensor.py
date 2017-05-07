@@ -14,6 +14,7 @@ import threading
 from botocore.exceptions import ClientError
 from gpiozero import OutputDevice
 import fan_animation
+import temp_utils
 
 # name of s3 bucket
 s3_bucket = 'blackholegreenhouse'
@@ -48,6 +49,7 @@ fan = OutputDevice(17, active_high=False)
 relay2 = OutputDevice(27, active_high=False)
 sense.low_light = True
 is_log_save_success = False
+turn_on_fan_at_temp = temp_utils.f_to_c(97)
 sense.clear()
 
 
@@ -159,6 +161,15 @@ def stop_fan():
   sleep(1)
   display_success_led()
 
+def turn_on_fan_if_hot():
+  temp = sense.get_temperature()
+  if is_fan_on == False and temp > turn_on_fan_at_temp:
+    print('fan on at ' + str(temp_utils.c_to_f(temp)) + 'F') 
+    start_fan()
+  elif is_fan_on == True and temp < turn_on_fan_at_temp:
+    print('fan off at ' + str(temp_utils.c_to_f(temp)) + 'F')
+    stop_fan()
+
 # relay 1 joystick up to turn on and off
 def on_joy_up(event):
   if event.action == ACTION_RELEASED:
@@ -189,6 +200,7 @@ def main():
   try:
     while True:
       log_sensor()
+      turn_on_fan_if_hot()
       sleep(log_interval)
   except KeyboardInterrupt:
     sense.clear()
